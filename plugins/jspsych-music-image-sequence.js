@@ -35,6 +35,13 @@ jsPsych.plugins["music-image-sequence"] = (function() {
         description: 'The list of frames containing information to be displayed in sequence'
       },
 
+      format: {
+        type: jsPsych.plugins.parameterType.STRING,
+        pretty_name: 'Display format',
+        default: 'slideshow',
+        description: 'Whether frames should be displayed in a temporal sequence or arranged as a comic strip',
+      }
+
       choices: {
         type: jsPsych.plugins.parameterType.KEYCODE,
         pretty_name: 'Choices',
@@ -183,15 +190,15 @@ jsPsych.plugins["music-image-sequence"] = (function() {
       jsPsych.finishTrial(trial_data);
     };
 
-    // Embed the rest of the trial into a function so that we can attach to a button if desired
-    function start_audio(){
-
+    // Create our function for presenting a slideshow
+    function present_slideshow(){
       var wait_time = 0;
       var wait_int = trial.frame_interval_ms;
 
       // function to create a frame
       var current_frame = 0;
 
+      // Define a function to generate the current frame
       function create_frame(){
         var frame = trial.frames[current_frame];
 
@@ -237,6 +244,59 @@ jsPsych.plugins["music-image-sequence"] = (function() {
         }
       }  
 
+      // Loop over iterations of the slideshow
+      for (var i=0; i<trial.num_sequence_iterations; i++){
+        // Loop over frames
+        for (var f=0; f<trial.frames.length; f++){
+          jsPsych.pluginAPI.setTimeout(create_frame, startTime+wait_time);
+          wait_time += wait_int;
+        }
+      }
+
+    };
+
+    function present_comicstrip(){
+      var html = '<div class="row my-5">';
+
+      for (let iframe=0; iframe<frames.length; iframe++){
+        html += '<div class="col">';
+        html = '<div class="row">';
+        
+        for (var img=0; img < frame.image.length; img++){
+          html += '<div class="col">'
+          html += '<img src="'+frame.image[img]+'" id="jspsych-music-image-sequence'+img.toString()+'" style="';
+
+          if(trial.stimulus_height !== null){
+            html += 'height:'+trial.stimulus_height+'px; '
+            if(trial.stimulus_width == null && trial.maintain_aspect_ratio){
+              html += 'width: auto; ';
+            }
+          }
+
+          if(trial.stimulus_width !== null){
+            html += 'width:'+trial.stimulus_width+'px; '
+            if(trial.stimulus_height == null && trial.maintain_aspect_ratio){
+              html += 'height: auto; ';
+            }
+          }
+
+          html +='"></img>';
+          html +='</div>';
+        }
+
+        html = '</div>';
+        if (frame.text){
+          html += frame.text;
+        }
+
+        html += '</div>';
+      }
+
+      html +='</div>';
+    }
+
+    // Embed the rest of the trial into a function so that we can attach to a button if desired
+    function start_audio(){
       // start audio
       if (context !== null) {
         startTime = context.currentTime;
@@ -252,15 +312,11 @@ jsPsych.plugins["music-image-sequence"] = (function() {
         }, trial.trial_duration);
       }
 
-      // Schedule our timeline
-
-      // Loop over iterations
-      for (var i=0; i<trial.num_sequence_iterations; i++){
-        // Loop over frames
-        for (var f=0; f<trial.frames.length; f++){
-          jsPsych.pluginAPI.setTimeout(create_frame, startTime+wait_time);
-          wait_time += wait_int;
-        }
+      // Present our stimuli
+      if (trial.format == 'slideshow'){
+        jsPsych.pluginAPI.setTimeout(present_slideshow, 0);
+      } else if (trial.format == 'comicstrip'){
+        jsPsych.pluginAPI.setTimeout(present_comicstrip, 0);
       }
 
       if(trial.displayQuestionsAtStart) {
