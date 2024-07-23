@@ -39,7 +39,7 @@ jsPsych.plugins["music-image-sequence"] = (function() {
         type: jsPsych.plugins.parameterType.STRING,
         pretty_name: 'Display format',
         default: 'slideshow',
-        description: 'Whether frames should be displayed in a temporal sequence or arranged as a comic strip',
+        description: 'Whether frames should be displayed in a temporal sequence (slideshow) [default] or arranged as a comic strip (comicstrip)',
       }
 
       choices: {
