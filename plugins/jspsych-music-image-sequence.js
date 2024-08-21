@@ -190,32 +190,25 @@ jsPsych.plugins["music-image-sequence"] = (function() {
       jsPsych.finishTrial(trial_data);
     };
 
+    function set_style(html=""){
+      // Load our css if we have it
+      if (trial.css) {
+        html += '<style>'+trial.css+'</style>';
+      }
+
+      return html
+    }
+
     // Frame-generating function
     function create_frame(frame){
       let html = '';
       
-      html += '<div class="col border">';
+      html += '<div class="frame col border">';
       html += '<div class="row">';
       
       for (var img=0; img < frame.image.length; img++){
         html += '<div class="col-12">'
-        html += '<img src="'+frame.image[img]+'" id="jspsych-music-image-sequence'+img.toString()+'" style="';
-
-        if(trial.stimulus_height !== null){
-          html += 'height:'+trial.stimulus_height+'px; '
-          if(trial.stimulus_width == null && trial.maintain_aspect_ratio){
-            html += 'width: auto; ';
-          }
-        }
-
-        if(trial.stimulus_width !== null){
-          html += 'width:'+trial.stimulus_width+'px; '
-          if(trial.stimulus_height == null && trial.maintain_aspect_ratio){
-            html += 'height: auto; ';
-          }
-        }
-
-        html +='"></img>';
+        html += '<img src="'+frame.image[img]+'" id="jspsych-music-image-sequence'+img.toString()+'"></img>';
         html +='</div>'; // col
       }
 
@@ -237,8 +230,13 @@ jsPsych.plugins["music-image-sequence"] = (function() {
 
       // Callback function to show the current frame
       function show_slideshow_frame(){
-        // Grab the current frame and show it
-        display_element.innerHTML = create_frame(trial.frames[current_frame]);
+        let html = set_style();
+
+        // Grab the current frame
+        html += create_frame(trial.frames[current_frame]);
+
+        // Show it
+        display_element.innerHTML = html
 
         current_frame = (current_frame < trial.frames.length-1) ? current_frame+1 : 0;
       }  
@@ -255,7 +253,10 @@ jsPsych.plugins["music-image-sequence"] = (function() {
     };
 
     function present_comicstrip(){
-      var html = '<div class="row my-5">'; // start of row of frames
+      var html = set_style();
+
+      // start of row of frames
+      html += '<div class="comicstrip row my-5">'; 
 
       for (let iframe=0; iframe < trial.frames.length; iframe++){
         frame = trial.frames[iframe]
